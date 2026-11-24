@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Кадровый учёт — БНТУ</title>
+<style>
+  :root { font-family: "Segoe UI", Tahoma, Arial, sans-serif; color: #22312c; background: #e7ede9; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; }
+  header { background: #35604f; color: #f2f7f4; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  header h1 { font-size: 20px; margin: 0; }
+  nav { background: #3f7260; display: flex; flex-wrap: wrap; }
+  nav button { background: none; border: none; color: #d9e7df; padding: 12px 20px; font-size: 15px; cursor: pointer; border-bottom: 3px solid transparent; }
+  nav button.active { background: #e7ede9; color: #2b4f42; border-bottom: 3px solid #35604f; font-weight: 600; }
+  main { padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; overflow-y: auto; }
+  h2 { margin-top: 0; }
+  .card { background: #fdfefc; border-radius: 10px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(40,60,50,.10); margin-bottom: 16px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  /* главное окно: список занимает всю высоту окна, прокрутка внутри списка */
+  main.fill { max-width: 1500px; display: flex; flex-direction: column; }
+  main.fill > h2, main.fill > .search { flex: none; }
+  .emp-card { flex: 1 1 auto; min-height: 260px; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 8px; }
+  .emp-card > .row { flex: none; margin-bottom: 10px; }
+  .emp-scroll { flex: 1 1 0; min-height: 0; overflow: auto; direction: rtl; }
+  .emp-scroll > table { direction: ltr; min-width: 1250px; }
+  .emp-scroll th { position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 0 #c4d2c8; }
+  th, td { border: 1px solid #c4d2c8; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #e9f0eb; white-space: nowrap; color: #2b4f42; }
+  .stage { white-space: nowrap; }
+  .stage.mini { font-size: 11px; padding: 1px 6px; }
+  input, select, textarea { font: inherit; padding: 6px 8px; border: 1px solid #9db4a8; border-radius: 6px; width: 100%; background: #fff; }
+  label { font-size: 13px; display: block; margin: 8px 0 3px; color: #33463d; font-weight: 600; }
+  label.chk { font-weight: 400; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+  .row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .btn { background: #3f7260; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+  .btn:hover { background: #4c8771; }
+  .btn.green { background: #3f8f4f; } .btn.green:hover { background: #47a35c; }
+  .btn.red { background: #b14a4a; font-size: 12px; padding: 4px 10px; }
+  .btn.small { font-size: 12px; padding: 5px 10px; }
+  .btn.ghost { background: #e2e9e4; color: #22312c; }
+  .stage { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .stage.done { background: #d9f0dd; color: #1c6b32; }
+  .stage.now { background: #fdf0cf; color: #8a6116; }
+  .stage.wait { background: #dfe7f5; color: #33477f; }
+  .stage.final { background: #d8e6f8; color: #1d4b8f; }
+  .fio-link { color: #12588f; cursor: pointer; text-decoration: underline; }
+  .fio-link:hover { color: #0e446e; }
+  .grp-fio { color: #0b4f9e; font-weight: 700; font-size: 15px; }
+  .grp-row td { background: #dcebe2; }
+  .tint0 td { background: #f4f9f5; }
+  .tint1 td { background: #fdfcf6; }
+  .jobs-list { font-size: 12px; color: #5c6f65; margin: 3px 0 0; }
+  .search { margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .search input, .search select { width: auto; min-width: 180px; flex: 1; }
+  .muted { color: #5c6f65; font-size: 13px; }
+  .history { font-size: 12px; color: #4a5e53; margin: 6px 0 0; }
+  #errbox { display: none; background: #fbe3e3; border: 2px solid #b14a4a; color: #6d1f1f; padding: 10px 14px; margin: 12px 20px; border-radius: 8px; white-space: pre-wrap; font-size: 13px; }
+  dialog { border: 1px solid #9db4a8; border-radius: 10px; padding: 20px; max-width: 640px; width: 95%; max-height: 82vh; overflow-y: auto; }
+  dialog::backdrop { background: rgba(30,45,38,.4); }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: #dfe8e2; }
+  ::-webkit-scrollbar-thumb { background: #a3bcae; border-radius: 8px; border: 3px solid #dfe8e2; }
+  ::-webkit-scrollbar-thumb:hover { background: #7f9b8c; }
+  * { scrollbar-width: thin; scrollbar-color: #a3bcae #dfe8e2; }
+  dialog .dlg-head { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #fff; margin: -20px -20px 12px; padding: 12px 20px; border-bottom: 1px solid #d5e0d9; }
+  dialog .dlg-head h3 { margin: 0; }
+  .x-btn { flex: none; background: #e2e9e4; color: #22312c; border: none; border-radius: 6px; width: 34px; height: 34px; font-size: 18px; line-height: 1; cursor: pointer; }
+  .x-btn:hover { background: #b14a4a; color: #fff; }
+  #prev { max-width: 940px; }
+  #prevFrame { width: 100%; height: 66vh; border: 1px solid #9db4a8; background: #fff; display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗂 Кадровый учёт — служба персонала</h1>
+</header>
+<nav id="nav">
+  <button data-tab="emp" class="active">Сотрудники</button>
+  <button data-tab="docs">Исходящие запросы</button>
+  <button data-tab="incoming">Входящие запросы (студенты АХС)</button>
+  <button data-tab="tpl">Шаблоны документов</button>
+  <button data-tab="settings">⚙ Настройка</button>
+  <button data-tab="backup">Резервная копия</button>
+</nav>
+<div id="errbox"></div>
+<main id="app"></main>
+<dialog id="dlg"></dialog>
+<dialog id="prev"></dialog>
+
+<script>
+"use strict";
+
+// ======== показ ошибок на экране ========
+function showError(msg) {
+  var box = document.getElementById("errbox");
+  box.textContent = "Ошибка: " + msg;
+  box.style.display = "block";
+}
+window.onerror = function (msg) { showError(msg); return false; };
+
+// ======== вспомогательные функции по полям сотрудника ========
+function legacyBirthYear(e) { var m = String(e.birthYear || "").match(/\d{4}/); return m ? m[0] : ""; }
+function birthText(e) {
+  if (e.birthDate) return fmt(e.birthDate);
+  var y = legacyBirthYear(e);
+  return y ? y + " г." : "—";
+}
+function passportFull(e) {
+  if (!e.passportNo) return e.passport || "";
+  var t = e.passportNo;
+  if (e.passportDate) t += ", выдан " + fmt(e.passportDate);
+  if (e.passportIssuer) t += " " + e.passportIssuer;
+  return t;
+}
+function passportHtml(e) {
+  if (!e.passportNo) return e.passport ? esc(e.passport) : "—";
+  return "<b>" + esc(e.passportNo) + "</b>" +
+    (e.passportDate ? "<br><span class='muted'>выдан " + fmt(e.passportDate) + "</span>" : "") +
+    (e.passportIssuer ? "<br><span class='muted'>" + esc(e.passportIssuer) + "</span>" : "") +
+    (e.passportPersonal ? "<br><span class='muted'>личный № " + esc(e.passportPersonal) + "</span>" : "");
+}
+// старые записи: полная дата, записанная в «год рождения», переносится в «дату рождения»
+function migrateDb(d) {
+  var list = d.employees || [];
+  for (var i = 0; i < list.length; i++) {
+    var e = list[i];
+    var m = String(e.birthYear || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (m) { if (!e.birthDate) e.birthDate = m[3] + "-" + m[2] + "-" + m[1]; e.birthYear = m[3]; }
+  }
+  // внутренняя проверка: новая цепочка этапов (проверка → подан → ожидание ответа → результат)
+  var ds = d.docs || [];
+  for (var j = 0; j < ds.length; j++) {
+    var x = ds[j];
+    if (x.type === "internal" && !x.flow2) {
+      if (x.stageIndex >= 1) { x.stageIndex = 3; x.result = x.result || ""; }
+      x.flow2 = true;
+    }
+  }
+  return d;
+}
+
+// ======== хранение: локальная программа на Python делает всё в базе SQLite ========
+var db = { employees: [], docs: [], incoming: [] };
+var saveTimer = null, saveInFlight = false;
+function doSave() {
+  saveInFlight = true;
+  fetch("/api/db", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(db) })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); })
+    .then(function () { saveInFlight = false; })
+    .catch(function () { saveInFlight = false; showError("Не удалось сохранить данные в базу. Убедитесь, что программа запущена (файл кадровый_учёт.py), и не закрывали её окно."); });
+}
+function save() {
+  if (saveInFlight) { clearTimeout(saveTimer); }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 120);
+}
+function initApp() {
+  fetch("/api/db")
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.employees) db = migrateDb(d);
+      render();
+    })
+    .catch(function () { showError("Нет связи с программой. Запустите кадровый_учёт.py и откройте " + location.href); });
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function today() { var d = new Date(); return d.toISOString().slice(0, 10); }
+function fmt(d) { if (!d) return "—"; var p = d.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
+function esc(s) { return String(s === undefined || s === null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+// ======== маршруты документов ========
+var DOC_TYPES = {
+  infocenter:    { title: "Запрос в Инфоцентр УВД", stages: ["Начальник управления персоналом", "Ректор (визирование)", "Регистрация в ОДО", "Отправлен"] },
+  characteristic:{ title: "Запрос характеристики с прошлого места работы", stages: ["Начальник управления персоналом", "Проректор по безопасности", "Регистрация в ОДО", "Отправлен"] },
+  uvd:           { title: "Запрос в УВД администрации (сторож/инженер)", stages: ["Начальник управления персоналом", "Проректор №1", "Проректор по безопасности", "Регистрация в ОДО", "Отправлен"] },
+  internal:      { title: "Внутренняя проверка", stages: ["Заместитель начальника по управлению персоналом", "Подан", "Ожидание ответа", "Результат (да / нет)"], internal: true }
+};
+var IN_STAGES = ["Начальник отдела по работе с персоналом", "Проректор по безопасности", "Ректор", "Регистрация в ОДО", "Ответ отправлен по почте"];
+
+function internalBadge(d) {
+  var i = d.stageIndex, sub = d.submittedDate ? " " + fmt(d.submittedDate) : "";
+  if (i <= 0) return '<span class="stage now">⏳ Сейчас: ' + DOC_TYPES.internal.stages[0] + "</span>";
+  if (i === 1) return '<span class="stage wait">✓ Подан' + sub + "</span>";
+  if (i === 2) return '<span class="stage wait">Подан' + sub + " → ⏳ Ожидание ответа</span>";
+  var r = d.result === "yes" ? "ДА" : (d.result === "no" ? "НЕТ" : "не указан");
+  return '<span class="stage final">Результат: ' + r + (d.resultDate ? " (" + fmt(d.resultDate) + ")" : "") + "</span>" +
+    (d.submittedDate ? ' <span class="muted">Подан' + sub + "</span>" : "");
+}
+function stageBadge(doc, stages) {
+  if (doc.type === "internal") return internalBadge(doc);
+  var i = doc.stageIndex;
+  if (i >= stages.length - 1) return '<span class="stage final">' + stages[i] + "</span>";
+  if (i === 0) return '<span class="stage now">⏳ Сейчас: ' + stages[0] + "</span>";
+  return '<span class="stage wait">✓ ' + stages[i - 1] + " → ⏳ " + stages[i] + "</span>";
+}
+function historyHtml(doc) {
+  if (!doc.history || !doc.history.length) return "";
+  var parts = [];
+  for (var i = 0; i < doc.history.length; i++) parts.push(doc.history[i].stage + " — " + fmt(doc.history[i].date));
+  return '<p class="history">История: ' + parts.join("; ") + "</p>";
+}
+
+// ======== вкладки ========
+var currentTab = "emp";
+function setTab(tab) {
+  currentTab = tab;
+  var btns = document.querySelectorAll("#nav button");
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].dataset.tab === tab);
+  render();
+}
+function render() {
+  var app = document.getElementById("app");
+  app.className = currentTab === "emp" ? "fill" : "";
+  var html = "<h2>Загрузка…</h2>";
+  if (currentTab === "emp") html = viewEmployees();
+  else if (currentTab === "docs") html = viewDocs();
+  else if (currentTab === "incoming") html = viewIncoming();
+  else if (currentTab === "tpl") html = viewTemplates();
+  else if (currentTab === "settings") html = viewSettings();
+  else html = viewBackup();
+  app.innerHTML = html;
+  var sc = document.getElementById("empScroll");
+  if (sc) { try { sc.scrollLeft = -sc.scrollWidth; } catch (e) {} }
+}
+
+// ======== сотрудники ========
+var empFilter = "", empSubFilter = "";
+var STAGE_SHORT = { infocenter: "отправлен", characteristic: "отправлен", uvd: "отправлен", internal: "результат получен" };
+function docStatusHtml(empId, type) {
+  var stages = DOC_TYPES[type].stages;
+  var out = [];
+  for (var i = 0; i < db.docs.length; i++) {
+    var d = db.docs[i];
+    if (d.employeeId !== empId || d.type !== type) continue;
+    if (d.stageIndex >= stages.length - 1) {
+      out.push("<span class='stage done mini'>✓ " + STAGE_SHORT[type] + "</span>");
+    } else {
+      out.push("<span class='stage now mini' title='Сейчас: " + esc(stages[d.stageIndex]) + "'>⏳ " + (d.stageIndex + 1) + "/" + stages.length + "</span>");
+    }
+  }
+  if (!out.length) return "<span class='muted'>—</span>";
+  return out.join("<br>");
+}
+function viewEmployees() {
+  var q = empFilter.trim().toLowerCase();
+  var list = [];
+  for (var i = 0; i < db.employees.length; i++) {
+    var e = db.employees[i];
+    if (!q || (e.fio + " " + e.position + " " + (e.subdivision || "")).toLowerCase().indexOf(q) !== -1) list.push(e);
+  }
+  // если запрос совпал с названием подразделения — включаем поиск внутри подразделения
+  var isSubSearch = false;
+  if (q) {
+    for (var i2 = 0; i2 < db.employees.length; i2++) {
+      if ((db.employees[i2].subdivision || "").toLowerCase().indexOf(q) !== -1) { isSubSearch = true; break; }
+    }
+  }
+  if (isSubSearch && empSubFilter.trim()) {
+    var s = empSubFilter.trim().toLowerCase();
+    var filtered = [];
+    for (var i3 = 0; i3 < list.length; i3++) {
+      var e3 = list[i3];
+      if ((e3.fio + " " + e3.position).toLowerCase().indexOf(s) !== -1) filtered.push(e3);
+    }
+    list = filtered;
+  }
+  // новые сотрудники — сверху списка
+  list.sort(function (a, b) {
+    var da = a.createdAt || "0000-00-00", dbb = b.createdAt || "0000-00-00";
+    if (da !== dbb) return da < dbb ? 1 : -1;
+    return db.employees.indexOf(b) - db.employees.indexOf(a);
+  });
+  var rows = "";
+  for (var i = 0; i < list.length; i++) {
+    var e = list[i];
+    rows += "<tr>" +
+      "<td><b><span class='fio-link' data-act='editEmployee' data-id='" + e.id + "' title='Открыть карточку'>" + esc(e.fio) + "</span></b><br><span class='muted'>" + esc(e.position) + "</span></td>" +
+      "<td>" + esc(e.subdivision || "—") + "</td>" +
+      "<td>" + esc(birthText(e)) + "</td>" +
+      "<td>" + esc(e.phone) + (e.phone2 ? "<br>" + esc(e.phone2) : "") + "</td>" +
+      "<td>" + esc(e.address) + "</td>" +
+      "<td>" + esc(e.regAddress) + "</td>" +
+      "<td>" + passportHtml(e) + "</td>" +
+      "<td>" + fmt(e.startDate) + "</td>" +
+      "<td>" + fmt(e.hireDate) + "</td>" +
+      "<td>" + (e.fireDate ? fmt(e.fireDate) : "<span class='stage done'>работает</span>") + "</td>" +
+      "<td>" +
+      "<button class='btn small' data-act='editEmployee' data-id='" + e.id + "'>✏️</button> " +
+      "<button class='btn small green' data-act='addDocsFor' data-id='" + e.id + "'>＋ запросы</button> " +
+      "<button class='btn small red' data-act='delEmployee' data-id='" + e.id + "'>🗑</button>" +
+      "</td></tr>";
+  }
+  if (!rows) rows = "<tr><td colspan='11' class='muted'>Нет сотрудников. Нажмите «Добавить сотрудника».</td></tr>";
+  return "<h2>Сотрудники</h2>" +
+    "<div class='search'><input id='empSearch' placeholder='Поиск по ФИО, должности или подразделению…' value='" + esc(empFilter) + "'></div>" +
+    (isSubSearch ? "<div class='search'><span class='muted' style='align-self:center'>Подразделение найдено. Поиск внутри:</span><input id='empSubSearch' placeholder='Поиск по ФИО или должности внутри подразделения…' value='" + esc(empSubFilter) + "'></div>" : "") +
+    "<div class='card emp-card'><div class='row' style='margin-top:0'><button class='btn green' data-act='editEmployee'>＋ Добавить сотрудника</button></div>" +
+    "<div class='emp-scroll' id='empScroll'><table><tr><th>ФИО / должность</th><th>Подразделение</th><th>Дата рожд.</th><th>Телефон</th><th>Адрес проживания</th><th>Место регистрации</th><th>Паспорт</th><th>Начало оформления</th><th>Принят</th><th>Уволен</th><th></th></tr>" +
+    rows + "</table></div></div>";
+}
+
+function dlgField(label, id, value, type) {
+  return "<div><label>" + label + "</label><input" + (type ? " type='" + type + "'" : "") + " id='" + id + "' value='" + esc(value || "") + "'></div>";
+}
+function editEmployee(id) {
+  var e = null;
+  if (id) { for (var i = 0; i < db.employees.length; i++) if (db.employees[i].id === id) e = db.employees[i]; }
+  openDialog(e ? "Редактировать сотрудника" : "Карточка нового сотрудника",
+    "<div class='grid'>" +
+    "<div style='grid-column:1/-1'>" + dlgField("Фамилия Имя Отчество *", "f_fio", e && e.fio).replace("<div>", "").replace("</div>", "") + "</div>" +
+    dlgField("Дата рождения", "f_birthDate", e && e.birthDate, "date") +
+    "<div><label>Пол</label><select id='f_gender'><option value=''>— не указан —</option><option value='м'" + (e && e.gender === "м" ? " selected" : "") + ">мужской</option><option value='ж'" + (e && e.gender === "ж" ? " selected" : "") + ">женский</option></select></div>" +
+    (e && legacyBirthYear(e) && (!e.birthDate || e.birthDate.slice(0, 4) !== legacyBirthYear(e)) ? "<div class='muted' style='grid-column:1/-1'>Ранее был указан год рождения: " + esc(legacyBirthYear(e)) + (e.birthDate ? " (проверьте дату рождения)" : " — укажите полную дату рождения") + "</div>" : "") +
+    dlgField("Должность", "f_position", e && e.position) +
+    dlgField("Подразделение", "f_subdivision", e && e.subdivision) +
+    dlgField("Табельный номер", "f_personnelNo", e && e.personnelNo) +
+    dlgField("Код профессии", "f_profCode", e && e.profCode) +
+    dlgField("Дата изменения должности", "f_positionDate", e && e.positionDate, "date") +
+    dlgField("Рост (см)", "f_height", e && e.height) +
+    dlgField("Размер: одежда", "f_sizeClothes", e && e.sizeClothes) +
+    dlgField("Размер: обувь", "f_sizeShoes", e && e.sizeShoes) +
+    dlgField("Размер: головной убор", "f_sizeHead", e && e.sizeHead) +
+    dlgField("Размер: рукавицы", "f_sizeMittens", e && e.sizeMittens) +
+    dlgField("Размер: перчатки", "f_sizeGloves", e && e.sizeGloves) +
+    dlgField("Номер телефона", "f_phone", e && e.phone) +
+    dlgField("Дополнительный номер телефона", "f_phone2", e && e.phone2) +
+    "<div style='grid-column:1/-1'>" + dlgField("Адрес проживания", "f_address", e && e.address).replace("<div>", "").replace("</div>", "") + "</div>" +
+    "<div style='grid-column:1/-1'>" + dlgField("Место регистрации", "f_regAddress", e && e.regAddress).replace("<div>", "").replace("</div>", "") + "</div>" +
+    "<div style='grid-column:1/-1;border:1px solid #c4d2c8;border-radius:8px;padding:2px 12px 12px'>" +
+    "<label>Паспорт</label>" +
+    (e && e.passport && !e.passportNo ? "<div class='muted' style='margin-bottom:4px'>Ранее в этой графе было записано: " + esc(e.passport) + " — внесите данные в поля ниже.</div>" : "") +
+    "<div class='grid'>" +
+    "<div><label>Номер (две буквы и семь цифр)</label><input id='f_passportNo' maxlength='9' placeholder='AB1234567' style='text-transform:uppercase' value='" + esc(e && e.passportNo) + "'></div>" +
+    dlgField("Дата выдачи", "f_passportDate", e && e.passportDate, "date") +
+    "<div><label>Личный номер</label><input id='f_passportPersonal' maxlength='14' placeholder='1234567A123AB1' style='text-transform:uppercase' value='" + esc(e && e.passportPersonal) + "'></div>" +
+    "<div style='grid-column:1/-1'>" + dlgField("Кем выдан", "f_passportIssuer", e && e.passportIssuer).replace("<div>", "").replace("</div>", "") + "</div>" +
+    "</div></div>" +
+    dlgField("Дата начала оформления", "f_startDate", e && e.startDate, "date") +
+    dlgField("Дата принятия на работу", "f_hireDate", e && e.hireDate, "date") +
+    dlgField("Дата увольнения", "f_fireDate", e && e.fireDate, "date") +
+    "<div style='grid-column:1/-1'><label>Примечания</label><textarea id='f_note' rows='3' placeholder='Заметки по сотруднику…'>" + esc(e && e.note) + "</textarea></div>" +
+    "</div>" +
+    "<div class='row'><button class='btn green' data-act='saveEmployee' data-id='" + (id || "") + "'>💾 Сохранить</button>" +
+    (e ? "" : "<button class='btn' data-act='saveEmployee' data-id='' data-thendocs='1'>💾 Сохранить и создать запросы</button>") +
+    "<button class='btn' data-act='previewCard' data-id='" + (id || "") + "'>🖨 Предпросмотр и печать карточки</button>" +
+    "<button class='btn ghost' data-act='closeDialog'>✕ Закрыть</button></div>"
+  );
+}
+function saveEmployee(id, thenDocs) {
+  var fio = document.getElementById("f_fio").value.trim();
+  if (!fio) { alert("Укажите ФИО!"); return; }
+  var pn = document.getElementById("f_passportNo").value.replace(/\s+/g, "").toUpperCase();
+  if (pn && !/^[A-ZА-ЯЁ]{2}[0-9]{7}$/.test(pn)) { alert("Номер паспорта: две буквы и семь цифр, например AB1234567."); return; }
+  var data = readEmployeeForm();
+  if (id) {
+    for (var i = 0; i < db.employees.length; i++) if (db.employees[i].id === id) { for (var k in data) db.employees[i][k] = data[k]; }
+    save(); closeDialog(); render();
+  } else {
+    data.id = uid(); data.createdAt = today();
+    db.employees.push(data);
+    save(); closeDialog();
+    if (thenDocs) addDocsFor(data.id); else render();
+  }
+}
+function delEmployee(id) {
+  var e = null;
+  for (var i = 0; i < db.employees.length; i++) if (db.employees[i].id === id) e = db.employees[i];
+  var n = 0;
+  for (var j = 0; j < db.docs.length; j++) if (db.docs[j].employeeId === id) n++;
+  if (!confirm("Удалить сотрудника " + (e ? e.fio : "") + "?" + (n ? "\nТакже будут удалены его запросы (" + n + " шт.)." : ""))) return;
+  db.employees = db.employees.filter(function (x) { return x.id !== id; });
+  db.docs = db.docs.filter(function (d) { return d.employeeId !== id; });
+  save(); render();
+}
+
+// ======== карточка сотрудника: предпросмотр и печать ========
+function gv(id) { var n = document.getElementById(id); return n ? n.value : ""; }
+function readEmployeeForm() {
+  return {
+    fio: gv("f_fio").trim(),
+    birthDate: gv("f_birthDate"),
+    gender: gv("f_gender"),
+    position: gv("f_position").trim(),
+    subdivision: gv("f_subdivision").trim(),
+    personnelNo: gv("f_personnelNo").trim(),
+    profCode: gv("f_profCode").trim(),
+    positionDate: gv("f_positionDate"),
+    height: gv("f_height").trim(),
+    sizeClothes: gv("f_sizeClothes").trim(),
+    sizeShoes: gv("f_sizeShoes").trim(),
+    sizeHead: gv("f_sizeHead").trim(),
+    sizeMittens: gv("f_sizeMittens").trim(),
+    sizeGloves: gv("f_sizeGloves").trim(),
+    phone: gv("f_phone").trim(),
+    phone2: gv("f_phone2").trim(),
+    address: gv("f_address").trim(),
+    regAddress: gv("f_regAddress").trim(),
+    passportNo: gv("f_passportNo").replace(/\s+/g, "").toUpperCase(),
+    passportDate: gv("f_passportDate"),
+    passportPersonal: gv("f_passportPersonal").replace(/\s+/g, "").toUpperCase(),
+    passportIssuer: gv("f_passportIssuer").trim(),
+    startDate: gv("f_startDate"),
+    hireDate: gv("f_hireDate"),
+    fireDate: gv("f_fireDate"),
+    note: gv("f_note").trim()
+  };
+}
+function employeeCardHtml(e) {
+  function row(label, value) { return "<tr><th>" + label + "</th><td>" + (value ? esc(value) : "&nbsp;") + "</td></tr>"; }
+  function dt(d) { return d ? fmt(d) : ""; }
+  var sizes = [];
+  if (e.height) sizes.push("рост " + e.height + " см");
+  if (e.sizeClothes) sizes.push("одежда " + e.sizeClothes);
+  if (e.sizeShoes) sizes.push("обувь " + e.sizeShoes);
+  if (e.sizeHead) sizes.push("головной убор " + e.sizeHead);
+  if (e.sizeMittens) sizes.push("рукавицы " + e.sizeMittens);
+  if (e.sizeGloves) sizes.push("перчатки " + e.sizeGloves);
+  var phones = [e.phone, e.phone2].filter(function (x) { return x; }).join(", ");
+  var birth = e.birthDate ? fmt(e.birthDate) : (legacyBirthYear(e) ? legacyBirthYear(e) + " г." : "");
+  var g = e.gender === "м" ? "мужской" : (e.gender === "ж" ? "женский" : "");
+  var pass = "";
+  if (e.passportNo || e.passportDate || e.passportIssuer || e.passportPersonal) {
+    pass = row("Номер", e.passportNo) + row("Дата выдачи", dt(e.passportDate)) + row("Кем выдан", e.passportIssuer) + row("Личный номер", e.passportPersonal);
+  } else {
+    pass = row("Паспорт", e.passport || "");
+  }
+  var css = "@page{size:A4;margin:1.5cm} body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;margin:0;padding:14px 20px;background:#fff} " +
+    "h1{font-size:17pt;text-align:center;margin:0 0 4px;letter-spacing:1px} .fio{text-align:center;font-size:15pt;font-weight:bold;margin:0 0 10px} " +
+    "h2{font-size:12pt;margin:12px 0 4px;border-bottom:1px solid #000;padding-bottom:2px;text-transform:uppercase} " +
+    "table{width:100%;border-collapse:collapse} tr{page-break-inside:avoid} th,td{border:1px solid #000;padding:4px 7px;text-align:left;vertical-align:top;font-size:11.5pt} " +
+    "th{width:34%;font-weight:normal;background:#f0f0f0} .note{border:1px solid #000;min-height:4cm;padding:6px 8px;white-space:pre-wrap;font-size:11.5pt} " +
+    ".foot{margin-top:14px;font-size:9pt;color:#444}";
+  return "<!doctype html><html lang='ru'><head><meta charset='utf-8'><title>Карточка сотрудника — " + esc(e.fio) + "</title><style>" + css + "</style></head><body>" +
+    "<h1>КАРТОЧКА СОТРУДНИКА</h1><div class='fio'>" + esc(e.fio || "—") + "</div>" +
+    "<h2>Работа</h2><table>" + row("Должность", e.position) + row("Подразделение", e.subdivision) + row("Табельный номер", e.personnelNo) +
+    row("Код профессии", e.profCode) + row("Дата изменения должности", dt(e.positionDate)) + "</table>" +
+    "<h2>Личные данные</h2><table>" + row("Дата рождения", birth) + row("Пол", g) + row("Телефон", phones) + row("Адрес проживания", e.address) +
+    row("Место регистрации", e.regAddress) + row("Рост и размеры", sizes.join("; ")) + "</table>" +
+    "<h2>Паспорт</h2><table>" + pass + "</table>" +
+    "<h2>Даты оформления</h2><table>" + row("Дата начала оформления", dt(e.startDate)) + row("Дата принятия на работу", dt(e.hireDate)) + row("Дата увольнения", dt(e.fireDate)) + "</table>" +
+    "<h2>Примечания</h2><div class='note'>" + esc(e.note || "") + "</div>" +
+    "<div class='foot'>Дата печати: " + fmt(today()) + "</div></body></html>";
+}
+function previewCard(id) {
+  var base = id ? findEmp(id) : null, e = {}, k;
+  if (base) for (k in base) e[k] = base[k];
+  var data = readEmployeeForm();
+  for (k in data) e[k] = data[k]; // в карточку попадает и то, что ещё не сохранено
+  var d = document.getElementById("prev");
+  d.innerHTML = "<div class='dlg-head'><h3>Предпросмотр карточки</h3><button class='x-btn' data-act='closePreview' title='Закрыть' aria-label='Закрыть'>✕</button></div>" +
+    "<iframe id='prevFrame' title='Карточка сотрудника'></iframe>" +
+    "<div class='row'><button class='btn green' data-act='printPreview'>🖨 Печать</button><button class='btn ghost' data-act='closePreview'>✕ Закрыть предпросмотр</button></div>";
+  document.getElementById("prevFrame").srcdoc = employeeCardHtml(e);
+  if (!d.open) d.showModal();
+}
+function printPreview() {
+  var f = document.getElementById("prevFrame");
+  try { f.contentWindow.focus(); f.contentWindow.print(); }
+  catch (err) { alert("Не удалось открыть печать. Попробуйте ещё раз."); }
+}
+function closePreview() {
+  var d = document.getElementById("prev");
+  if (d.open) d.close();
+}
+
+// ======== исходящие запросы ========
+function addDocsFor(empId) {
+  var emp = null;
+  for (var i = 0; i < db.employees.length; i++) if (db.employees[i].id === empId) emp = db.employees[i];
+  if (!emp) return;
+  var checks = "";
+  for (var k in DOC_TYPES) {
+    checks += "<label class='chk'><input type='checkbox' id='cb_" + k + "' style='width:auto' checked> " + DOC_TYPES[k].title + "</label><br>";
+  }
+  checks += "<div style='margin-top:10px;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px'>" +
+    "<p class='muted' style='margin:0 0 6px'><b>Характеристика с прошлых мест работы:</b> можно создать до двух запросов — укажите места работы (пустые поля пропускаются).</p>" +
+    "<label>Место работы №1 (для запроса характеристики)</label><input id='w_work1'>" +
+    "<label>Адрес организации №1</label><input id='w_addr1'>" +
+    "<label>Место работы №2 (для запроса характеристики)</label><input id='w_work2'>" +
+    "<label>Адрес организации №2</label><input id='w_addr2'>" +
+    "</div>";
+  openDialog("Создать запросы — " + emp.fio,
+    "<p class='muted'>Отметьте, какие запросы нужны для этого сотрудника:</p>" + checks +
+    "<div class='row'><button class='btn green' data-act='createDocs' data-id='" + empId + "'>Создать</button>" +
+    "<button class='btn ghost' data-act='closeDialog'>Отмена</button></div>"
+  );
+}
+function createDocs(empId) {
+  var n = 0;
+  for (var k in DOC_TYPES) {
+    var cb = document.getElementById("cb_" + k);
+    if (!(cb && cb.checked)) continue;
+    if (k === "characteristic") {
+      var w1 = document.getElementById("w_work1") ? document.getElementById("w_work1").value.trim() : "";
+      var w2 = document.getElementById("w_work2") ? document.getElementById("w_work2").value.trim() : "";
+      var a1 = document.getElementById("w_addr1") ? document.getElementById("w_addr1").value.trim() : "";
+      var a2 = document.getElementById("w_addr2") ? document.getElementById("w_addr2").value.trim() : "";
+      if (w1) { db.docs.push({ id: uid(), employeeId: empId, type: k, stageIndex: 0, flow2: true, history: [], regNumber: "", notes: "", workplace: w1, workAddress: a1, createdAt: today() }); n++; }
+      if (w2) { db.docs.push({ id: uid(), employeeId: empId, type: k, stageIndex: 0, flow2: true, history: [], regNumber: "", notes: "", workplace: w2, workAddress: a2, createdAt: today() }); n++; }
+      if (!w1 && !w2) { db.docs.push({ id: uid(), employeeId: empId, type: k, stageIndex: 0, flow2: true, history: [], regNumber: "", notes: "", workplace: "", workAddress: "", createdAt: today() }); n++; }
+    } else {
+      db.docs.push({ id: uid(), employeeId: empId, type: k, stageIndex: 0, flow2: true, history: [], regNumber: "", notes: "", workplace: "", createdAt: today() });
+      n++;
+    }
+  }
+  save(); closeDialog(); setTab(n ? "docs" : "emp");
+}
+var docFilterType = "", docFilterStage = "all";
+function findDoc(id) { for (var i = 0; i < db.docs.length; i++) if (db.docs[i].id === id) return db.docs[i]; return null; }
+function findEmp(id) { for (var i = 0; i < db.employees.length; i++) if (db.employees[i].id === id) return db.employees[i]; return null; }
+function viewDocs() {
+  var list = [];
+  for (var i = 0; i < db.docs.length; i++) {
+    var d = db.docs[i];
+    if (docFilterType && d.type !== docFilterType) continue;
+    var stages = DOC_TYPES[d.type].stages;
+    if (docFilterStage === "inwork" && d.stageIndex >= stages.length - 1) continue;
+    if (docFilterStage === "done" && d.stageIndex < stages.length - 1) continue;
+    list.push(d);
+  }
+  list.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+  // группировка: все запросы одного кандидата — единым блоком
+  var groups = [], gmap = {};
+  for (var i = 0; i < list.length; i++) {
+    var dd = list[i];
+    if (!gmap[dd.employeeId]) { gmap[dd.employeeId] = { empId: dd.employeeId, docs: [] }; groups.push(gmap[dd.employeeId]); }
+    gmap[dd.employeeId].docs.push(dd);
+  }
+  var rows = "";
+  for (var g = 0; g < groups.length; g++) {
+    var grp = groups[g];
+    var emp = findEmp(grp.empId);
+    rows += "<tr class='grp-row'><td colspan='5'>👤 <span class='grp-fio'>" + (emp ? esc(emp.fio) : "(сотрудник удалён)") + "</span> " +
+      "<span class='muted'>" + (emp ? esc(emp.position) + (emp.subdivision ? " — " + esc(emp.subdivision) : "") : "") + "</span></td></tr>";
+    for (var j = 0; j < grp.docs.length; j++) {
+      var d = grp.docs[j];
+      var t = DOC_TYPES[d.type];
+      var stages = t.stages;
+      rows += "<tr class='tint" + (g % 2) + "'><td>" + fmt(d.createdAt) + "</td>" +
+        "<td><b>" + t.title + "</b>" + (d.workplace ? "<br><span class='muted'>Место работы: " + esc(d.workplace) + "</span>" : "") +
+        historyHtml(d) + (d.notes ? "<p class='history'>Заметки: " + esc(d.notes) + "</p>" : "") + "</td>" +
+        "<td>" + stageBadge(d, stages) + "</td>" +
+        "<td>" + esc(d.regNumber || "—") + "</td>" +
+        "<td>" +
+        docActionsHtml(d, stages) +
+        "<button class='btn small' data-act='editDoc' data-id='" + d.id + "'>✏️</button> " +
+        "<button class='btn small ghost' data-act='printDoc' data-id='" + d.id + "'>📄 Файл Word</button> " +
+        "<button class='btn small red' data-act='delDoc' data-id='" + d.id + "'>🗑</button></td></tr>";
+    }
+  }
+  if (!rows) rows = "<tr><td colspan='5' class='muted'>Нет запросов. Создавайте их из карточки сотрудника (кнопка «＋ запросы»).</td></tr>";
+  var typeOpts = "<option value=''>— все типы —</option>";
+  for (var k in DOC_TYPES) typeOpts += "<option value='" + k + "'" + (k === docFilterType ? " selected" : "") + ">" + DOC_TYPES[k].title + "</option>";
+  return "<h2>Исходящие запросы</h2>" +
+    "<div class='search'><select id='docType'>" + typeOpts + "</select>" +
+    "<select id='docStage'><option value='all'>— все статусы —</option><option value='inwork'" + (docFilterStage === "inwork" ? " selected" : "") + ">в работе</option><option value='done'" + (docFilterStage === "done" ? " selected" : "") + ">завершённые</option></select></div>" +
+    "<div class='card'><table><tr><th>Создан</th><th>Запрос / сотрудник</th><th>Этап согласования</th><th>Рег. № ОДО</th><th>Действия</th></tr>" + rows + "</table></div>" +
+    "<p class='muted'>Порядок движения документов:<br>• Инфоцентр УВД: нач. управления персоналом → ректор → регистрация в ОДО → отправка.<br>" +
+    "• Характеристика: нач. управления персоналом → проректор по безопасности → ОДО → отправка.<br>" +
+    "• УВД администрации: нач. управления персоналом → проректор №1 → проректор по безопасности → ОДО → отправка.<br>" +
+    "• Характеристика: можно создать до двух запросов с разных мест работы (место работы указывается при создании и в карточке запроса).<br>" +
+    "• Внутренняя проверка: зам. начальника по управлению персоналом → подан (с датой) → ожидание ответа → результат (да / нет).</p>";
+}
+function docActionsHtml(d, stages) {
+  if (d.stageIndex >= stages.length - 1) return "<span class='stage done'>✓ завершён</span> ";
+  if (d.type === "internal") {
+    if (d.stageIndex === 0) return "<button class='btn small green' data-act='advanceDoc' data-id='" + d.id + "'>➡️ Подан</button> ";
+    if (d.stageIndex === 1) return "<button class='btn small green' data-act='advanceDoc' data-id='" + d.id + "'>➡️ Ожидание ответа</button> ";
+    return "<span class='muted'>Ответ:</span> <button class='btn small green' data-act='resultYes' data-id='" + d.id + "'>✅ Да</button> " +
+      "<button class='btn small green' data-act='resultNo' data-id='" + d.id + "'>❌ Нет</button> ";
+  }
+  return "<button class='btn small green' data-act='advanceDoc' data-id='" + d.id + "'>➡️ " + stages[d.stageIndex] + " — выполнено</button> ";
+}
+function advanceDoc(id) {
+  var d = findDoc(id); if (!d) return;
+  var stages = DOC_TYPES[d.type].stages;
+  if (d.stageIndex >= stages.length - 1) return;
+  if (d.type === "internal" && d.stageIndex === 2) return; // итог — только через кнопки «Да» / «Нет»
+  d.history.push({ stage: stages[d.stageIndex], date: today() });
+  d.stageIndex++;
+  if (d.type === "internal" && d.stageIndex === 1) d.submittedDate = today();
+  save(); render();
+}
+function finishInternal(id, val) {
+  var d = findDoc(id); if (!d || d.type !== "internal" || d.stageIndex !== 2) return;
+  d.history.push({ stage: "Ожидание ответа", date: today() });
+  d.stageIndex = 3; d.result = val; d.resultDate = today();
+  save(); render();
+}
+function editDoc(id) {
+  var d = findDoc(id); if (!d) return;
+  var stages = DOC_TYPES[d.type].stages;
+  var opts = "";
+  for (var i = 0; i < stages.length; i++) opts += "<option value='" + i + "'" + (i === d.stageIndex ? " selected" : "") + ">" + stages[i] + "</option>";
+  openDialog("Изменить запрос",
+    "<p><b>" + DOC_TYPES[d.type].title + "</b></p>" +
+    "<label>Место работы (для запроса характеристики)</label><input id='f_work' value='" + esc(d.workplace || "") + "'>" +
+    "<label>Адрес организации (для запроса характеристики)</label><input id='f_workAddr' value='" + esc(d.workAddress || "") + "'>" +
+    "<label>Этап согласования</label><select id='f_stage'>" + opts + "</select>" +
+    (d.type === "internal"
+      ? "<label>Дата подачи</label><input type='date' id='f_submitted' value='" + esc(d.submittedDate || "") + "'>" +
+        "<label>Результат проверки (когда этап «Результат»)</label><select id='f_result'><option value=''>— не указан —</option>" +
+        "<option value='yes'" + (d.result === "yes" ? " selected" : "") + ">Да</option><option value='no'" + (d.result === "no" ? " selected" : "") + ">Нет</option></select>"
+      : "") +
+    "<label>Регистрационный номер ОДО</label><input id='f_reg' value='" + esc(d.regNumber) + "'>" +
+    "<label>Заметки</label><textarea id='f_notes' rows='3'>" + esc(d.notes) + "</textarea>" +
+    "<div class='row'><button class='btn green' data-act='saveDoc' data-id='" + id + "'>💾 Сохранить</button>" +
+    "<button class='btn ghost' data-act='closeDialog'>Отмена</button></div>"
+  );
+}
+function saveDoc(id) {
+  var d = findDoc(id); if (!d) return;
+  d.stageIndex = parseInt(document.getElementById("f_stage").value, 10);
+  if (d.type === "internal") {
+    var sd = document.getElementById("f_submitted"), rs = document.getElementById("f_result");
+    d.submittedDate = sd ? sd.value : "";
+    if (d.stageIndex >= 1 && !d.submittedDate) d.submittedDate = today();
+    d.result = d.stageIndex >= 3 && rs ? rs.value : "";
+    if (d.stageIndex >= 3 && !d.resultDate) d.resultDate = today();
+    if (d.stageIndex < 3) d.resultDate = "";
+  }
+  d.regNumber = document.getElementById("f_reg").value.trim();
+  d.workplace = (document.getElementById("f_work") ? document.getElementById("f_work").value : "").trim();
+  d.workAddress = (document.getElementById("f_workAddr") ? document.getElementById("f_workAddr").value : "").trim();
+  d.notes = document.getElementById("f_notes").value.trim();
+  save(); closeDialog(); render();
+}
+function delDoc(id) {
+  if (!confirm("Удалить этот запрос?")) return;
+  db.docs = db.docs.filter(function (x) { return x.id !== id; });
+  save(); render();
+}
+function printDoc(id) {
+  var d = findDoc(id); if (!d) return;
+  var emp = findEmp(d.employeeId);
+  var body = fillTemplate(getTemplate(d.type), emp, d.regNumber, d.workplace, d.workAddress);
+  var s = getTplSettings(d.type);
+  var lines = body.split("\n");
+  var centered = s.center || 0, counted = 0, parts = [];
+  for (var i = 0; i < lines.length; i++) {
+    if (centered > counted && lines[i].trim()) { parts.push("<p style='text-align:center;margin:0'>" + esc(lines[i]) + "</p>"); counted++; }
+    else parts.push("<p style='margin:0'>" + esc(lines[i]) + "</p>");
+  }
+  var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>" +
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->" +
+    "<style>@page{size:A4;margin:" + s.margin + "cm} body{font-family:'" + s.font + "',serif;font-size:" + s.size + "pt;line-height:1.5;margin:0}</style></head><body>" +
+    parts.join("") + "</body></html>";
+  var blob = new Blob(["\ufeff" + html], { type: "application/msword" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  var fname = ((emp ? emp.fio : "запрос") + " - характеристика").replace(/[\\/:*?"<>|]/g, " ").trim();
+  if (d.type === "infocenter") fname = (emp ? emp.fio : "запрос") + " - инфоцентр";
+  if (d.type === "uvd") fname = (emp ? emp.fio : "запрос") + " - УВД";
+  if (d.type === "internal") fname = (emp ? emp.fio : "запрос") + " - внутр. проверка";
+  a.download = fname + ".doc";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+// ======== шаблоны документов для печати ========
+var PLACEHOLDERS = "{ФИО}, {ФИОВин} (вин. падеж, скл. по полу), {который/которая}, {ДатаРождения}, {ГодРождения}, {Должность}, {Подразделение}, {Телефон}, {Адрес}, {МестоРегистрации}, {Паспорт}, {ЛичныйНомер}, {ДатаНачалаОформления}, {ДатаПринятия}, {ДатаУвольнения}, {РегНомер}, {Организация}, {АдресОрганизации}, {МестоРаботы}, {Исполнитель}, {ТелефонИсполнителя}, {ЭлектроннаяПочта}, {ДатаСегодня}";
+function defaultTemplate(k) {
+  if (k === "characteristic") return "{Организация}\n{АдресОрганизации}\n\nО предоставлении информации\n\nБелорусский национальный технический университет (далее – БНТУ) в соответствии с требованиями Декрета Президента Республики Беларусь от 15.12.2014 г. № 5 «Об усилении требований к руководящим кадрам и работникам организаций» просит Вас предоставить характеристику, по форме установленной постановлением Совета Министров Республики Беларусь от 14 октября 2021г. № 585 «О форме характеристики» в наш адрес на {ФИОВин}, {ДатаРождения} г.р., {который/которая} рассматривается для возможного трудоустройства в БНТУ.\n\nПросим направить копию характеристики по электронной почте: {ЭлектроннаяПочта}, оригинал выслать по почте.\n\nНачальник УпоРсП О.В.Куневич\n{Исполнитель} {ТелефонИсполнителя}";
+  if (k === "internal") return "Проведена внутренняя проверка в отношении {ФИО}, {ГодРождения} г.р., {Должность} (подразделение: {Подразделение}).";
+  return "Прошу предоставить сведения о привлечении к уголовной и административной ответственности\n{ФИО}, {ГодРождения} г.р., проживающего(ую) по адресу: {Адрес}.";
+}
+function getTemplate(k) {
+  if (db.templates && db.templates[k]) return db.templates[k];
+  return defaultTemplate(k);
+}
+function viewTemplates() {
+  var fonts = ["Times New Roman", "Arial", "Calibri", "Cambria", "Georgia"];
+  var rows = "";
+  for (var k in DOC_TYPES) {
+    var st = getTplSettings(k);
+    var fontOpts = "";
+    for (var f = 0; f < fonts.length; f++) fontOpts += "<option" + (fonts[f] === st.font ? " selected" : "") + ">" + fonts[f] + "</option>";
+    rows += "<div class='card'><h3 style='margin-top:0'>" + DOC_TYPES[k].title + "</h3>" +
+      "<label>Текст шаблона (вставьте ваш готовый текст из Word)</label>" +
+      "<textarea id='tpl_" + k + "' rows='9' style='width:100%;font-family:inherit'>" + esc(getTemplate(k)) + "</textarea>" +
+      "<div class='row' style='margin-top:10px'>" +
+      "<div><label>Шрифт</label><select id='st_font_" + k + "' style='width:auto'>" + fontOpts + "</select></div>" +
+      "<div><label>Размер шрифта (pt)</label><input type='number' min='8' max='24' step='0.5' id='st_size_" + k + "' value='" + st.size + "' style='width:80px'></div>" +
+      "<div><label>Поля страницы (см)</label><input type='number' min='0.5' max='5' step='0.5' id='st_margin_" + k + "' value='" + st.margin + "' style='width:80px'></div>" +
+      "<div><label>Центрировать первые строки (шапка)</label><input type='number' min='0' max='6' id='st_center_" + k + "' value='" + st.center + "' style='width:80px'></div>" +
+      "</div></div>";
+  }
+  return "<h2>Шаблоны документов для печати</h2>" +
+    "<div class='card'><p class='muted'>Вставьте сюда ваши готовые тексты из Word. На местах подстановок при печати автоматически подставятся данные конкретного сотрудника:<br><b>" + PLACEHOLDERS + "</b><br>" +
+    "Регистр подстановок не важен, допустимы пробелы внутри скобок: {фио}, { ФИО }, {{ФИО}}.<br>" +
+    "На печать выводится <u>только текст шаблона</u> с вашими шрифтом, размером и полями — никаких служебных надписей.<br>" +
+    "Кнопка «📄 Файл Word» у запроса <u>скачивает готовый файл .doc</u>: откройте его в Word, при необходимости исправьте и печатайте.</p></div>" +
+    "<div class='card'><h3 style='margin-top:0'>Общие данные исполнителя (для всех шаблонов)</h3><div class='grid'>" +
+    "<div style='grid-column:span 1'><label>Исполнитель (ФИО)</label><input id='set_executor' value='" + esc((db.settings && db.settings.executor) || "") + "'></div>" +
+    "<div style='grid-column:span 1'><label>Телефон исполнителя</label><input id='set_executorPhone' value='" + esc((db.settings && db.settings.executorPhone) || "") + "'></div>" +
+    "<div style='grid-column:span 2'><label>Электронная почта для ответов</label><input id='set_email' value='" + esc((db.settings && db.settings.email) || "") + "'></div>" +
+    "</div><p class='muted'>Подставляются как {Исполнитель}, {ТелефонИсполнителя}, {ЭлектроннаяПочта}. При смене исполнителя достаточно изменить здесь одно поле.</p></div>" +
+    rows +
+    "<div class='card'><div class='row' style='margin-top:0'><button class='btn green' data-act='saveTemplates'>💾 Сохранить шаблоны</button> <span class='muted' id='tplMsg'></span></div></div>";
+}
+function saveTemplates() {
+  db.templates = db.templates || {};
+  db.tplSettings = db.tplSettings || {};
+  for (var k in DOC_TYPES) {
+    db.templates[k] = document.getElementById("tpl_" + k).value;
+    db.tplSettings[k] = {
+      font: document.getElementById("st_font_" + k).value,
+      size: parseFloat(document.getElementById("st_size_" + k).value) || 14,
+      margin: parseFloat(document.getElementById("st_margin_" + k).value) || 2,
+      center: parseInt(document.getElementById("st_center_" + k).value, 10) || 0
+    };
+  }
+  db.settings = {
+    executor: document.getElementById("set_executor").value.trim(),
+    executorPhone: document.getElementById("set_executorPhone").value.trim(),
+    email: document.getElementById("set_email").value.trim()
+  };
+  save();
+  var m = document.getElementById("tplMsg");
+  if (m) { m.textContent = "Шаблоны и настройки сохранены ✓"; }
+}
+function declineFio(fio, gender) {
+  if (!fio) return "";
+  if (gender !== "м" && gender !== "ж") return fio;
+  var words = fio.trim().split(/\s+/);
+  var out = [];
+  for (var i = 0; i < words.length; i++) {
+    var w = words[i];
+    if (gender === "ж") {
+      if (/ая$/i.test(w)) w = w.slice(0, -2) + "ую";
+      else if (w.slice(-1) === "а") w = w.slice(0, -1) + "у";
+      // согласная в конце — фамилия не склоняется (Азаревич)
+    } else {
+      if (/ый$/i.test(w)) w = w.slice(0, -2) + "ого";
+      else if (/ий$/i.test(w)) w = w.slice(0, -2) + "его";
+      else if (w.slice(-1) === "й") w = w.slice(0, -1) + "я";
+      else if (w.slice(-1) === "ь") w = w.slice(0, -1) + "я";
+      else if (w.slice(-1) === "а") w = w.slice(0, -1) + "у";
+      else if (/[бвгдзклмнпрстфхцчшщ]$/i.test(w)) w = w + "а";
+    }
+    out.push(w);
+  }
+  return out.join(" ");
+}
+function fillTemplate(tpl, emp, reg, workplace, workAddress) {
+  var set = db.settings || {};
+  var g = emp ? emp.gender : "";
+  var vals = {
+    "ФИО": emp ? emp.fio || "" : "",
+    "ФИОВин": emp ? declineFio(emp.fio, g) : "",
+    "который/которая": g === "ж" ? "которая" : (g === "м" ? "который" : "который(ая)"),
+    "он/она": g === "ж" ? "она" : (g === "м" ? "он" : "он(она)"),
+    "его/её": g === "ж" ? "её" : (g === "м" ? "его" : "его(её)"),
+    "ДатаРождения": emp && emp.birthDate ? fmt(emp.birthDate) : "",
+    "ГодРождения": emp ? (emp.birthDate ? emp.birthDate.slice(0, 4) : legacyBirthYear(emp)) : "",
+    "Должность": emp ? emp.position || "" : "",
+    "Подразделение": emp ? emp.subdivision || "" : "",
+    "Телефон": emp ? emp.phone || "" : "",
+    "Адрес": emp ? emp.address || "" : "",
+    "Паспорт": emp ? passportFull(emp) : "",
+    "ЛичныйНомер": emp ? emp.passportPersonal || "" : "",
+    "МестоРегистрации": emp ? emp.regAddress || "" : "",
+    "ДатаНачалаОформления": emp && emp.startDate ? fmt(emp.startDate) : "",
+    "ДатаПринятия": emp && emp.hireDate ? fmt(emp.hireDate) : "",
+    "ДатаУвольнения": emp && emp.fireDate ? fmt(emp.fireDate) : "",
+    "РегНомер": reg || "",
+    "Организация": workplace || "",
+    "АдресОрганизации": workAddress || "",
+    "МестоРаботы": workplace || "",
+    "Исполнитель": set.executor || "",
+    "ТелефонИсполнителя": set.executorPhone || "",
+    "ЭлектроннаяПочта": set.email || "",
+    "ДатаСегодня": fmt(today())
+  };
+  if (!emp) return tpl;
+  var out = tpl;
+  for (var k in vals) {
+    // регистр не важен, допустимы пробелы внутри скобок и двойные скобки: {фио}, { ФИО }, {{ФИО}}
+    var rx = new RegExp("\\{\\s*\\{?\\s*" + k + "\\s*\\}?\\s*\\}", "gi");
+    out = out.replace(rx, function (m) {
+      var v = vals[k];
+      var t = m.replace(/[{}]/g, "").trim();
+      if (t.charAt(0) === t.charAt(0).toUpperCase() && t.charAt(0) !== t.charAt(0).toLowerCase()) v = v.charAt(0).toUpperCase() + v.slice(1);
+      return v;
+    });
+  }
+  return out;
+}
+
+// ======== входящие запросы (студенты АХС) ========
+var inFilter = "";
+function viewIncoming() {
+  var q = inFilter.trim().toLowerCase();
+  var list = [];
+  for (var i = 0; i < db.incoming.length; i++) {
+    var r0 = db.incoming[i];
+    if (!q || (r0.studentFio + " " + (r0.org || "")).toLowerCase().indexOf(q) !== -1) list.push(r0);
+  }
+  list.sort(function (a, b) { return a.incomingDate < b.incomingDate ? 1 : -1; });
+  var rows = "";
+  for (var i = 0; i < list.length; i++) {
+    var r = list[i];
+    rows += "<tr><td>" + fmt(r.incomingDate) + "</td>" +
+      "<td>" + esc(r.org) + (r.incomingNo ? "<br><span class='muted'>№ " + esc(r.incomingNo) + "</span>" : "") + "</td>" +
+      "<td><b><span class='fio-link' data-act='editIn' data-id='" + r.id + "' title='Открыть карточку'>" + esc(r.studentFio) + "</span></b>" +
+        (r.birthYear ? "<br><span class='muted'>" + esc(r.birthYear) + " г.р.</span>" : "") +
+        jobsListHtml(r) + "</td>" +
+      "<td>" + stageBadge(r, IN_STAGES) + historyHtml(r) + (r.notes ? "<p class='history'>" + esc(r.notes) + "</p>" : "") + "</td>" +
+      "<td>" + esc(r.regNumber || "—") + "</td>" +
+      "<td>" +
+      (r.stageIndex < IN_STAGES.length - 1
+        ? "<button class='btn small green' data-act='advanceIn' data-id='" + r.id + "'>➡️ " + IN_STAGES[r.stageIndex] + " — выполнено</button> "
+        : "<span class='stage done'>✓ завершён</span> ") +
+      "<button class='btn small' data-act='editIn' data-id='" + r.id + "'>✏️</button> " +
+      "<button class='btn small red' data-act='delIn' data-id='" + r.id + "'>🗑</button></td></tr>";
+  }
+  if (!rows) rows = "<tr><td colspan='6' class='muted'>Нет входящих запросов. Нажмите «Добавить входящий запрос».</td></tr>";
+  return "<h2>Входящие запросы характеристик (студенты, работавшие в АХС)</h2>" +
+    "<div class='search'><input id='inSearch' placeholder='Поиск по фамилии студента…' value='" + esc(inFilter) + "'></div>" +
+    "<div class='card'><div class='row' style='margin-top:0'><button class='btn green' data-act='editIn'>＋ Добавить входящий запрос</button></div>" +
+    "<table><tr><th>Дата поступления</th><th>От кого (требователь)</th><th>Студент</th><th>Этап</th><th>Рег. № ОДО</th><th>Действия</th></tr>" + rows + "</table></div>" +
+    "<p class='muted'>Маршрут: нач. отдела по работе с персоналом → проректор по безопасности → ректор → регистрация в ОДО → ответ отправлен требователю по почте.</p>";
+}
+function findIn(id) { for (var i = 0; i < db.incoming.length; i++) if (db.incoming[i].id === id) return db.incoming[i]; return null; }
+function jobsListHtml(r) {
+  var jobs = r && r.jobs ? r.jobs : [];
+  var parts = [];
+  for (var i = 0; i < jobs.length; i++) {
+    var j = jobs[i];
+    var period = (j.from ? fmt(j.from) : "—") + " – " + (j.to ? fmt(j.to) : "по н.в.");
+    parts.push(esc(j.position || "должность не указана") + " (" + period + ")");
+  }
+  return parts.length ? "<p class='jobs-list'>" + parts.join("; ") + "</p>" : "";
+}
+function jobRowHtml(job) {
+  job = job || {};
+  return "<div class='job-row' style='border:1px solid #cbd5e1;border-radius:8px;padding:8px;margin:6px 0;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end'>" +
+    "<div><label>Должность</label><input class='j_pos' value='" + esc(job.position || "") + "'></div>" +
+    "<div><label>Начало работы</label><input type='date' class='j_from' value='" + esc(job.from || "") + "'></div>" +
+    "<div><label>Окончание работы</label><input type='date' class='j_to' value='" + esc(job.to || "") + "'></div>" +
+    "<button type='button' class='btn small red' data-act='removeJob'>🗑</button></div>";
+}
+function addJob() {
+  var box = document.getElementById("jobsBox");
+  if (box) box.insertAdjacentHTML("beforeend", jobRowHtml({}));
+}
+function removeJob(id, btn) {
+  var row = btn.closest(".job-row");
+  if (row) row.remove();
+}
+function editIn(id) {
+  var r = id ? findIn(id) : null;
+  var jobs = r && r.jobs && r.jobs.length ? r.jobs : [{}];
+  var jobsHtml = "";
+  for (var i = 0; i < jobs.length; i++) jobsHtml += jobRowHtml(jobs[i]);
+  openDialog(r ? "Изменить входящий запрос" : "Новый входящий запрос",
+    "<div class='grid'>" +
+    dlgField("Дата поступления *", "f_incomingDate", r ? r.incomingDate : today(), "date") +
+    dlgField("№ входящего", "f_incomingNo", r && r.incomingNo) +
+    dlgField("Год рождения студента", "f_birthYear", r && r.birthYear) +
+    "<div style='grid-column:1/-1'>" + dlgField("Требователь (от кого поступил запрос)", "f_org", r && r.org).replace("<div>", "").replace("</div>", "") + "</div>" +
+    "<div style='grid-column:1/-1'>" + dlgField("ФИО студента *", "f_studentFio", r && r.studentFio).replace("<div>", "").replace("</div>", "") + "</div>" +
+    dlgField("Рег. № ОДО", "f_regNumber", r && r.regNumber) +
+    "<div style='grid-column:1/-1'><label>Места работы студента в АХС</label><div id='jobsBox'>" + jobsHtml + "</div>" +
+    "<button type='button' class='btn small' data-act='addJob'>＋ Добавить место работы</button></div>" +
+    "<div style='grid-column:1/-1'><label>Заметки</label><textarea id='f_notes' rows='2'>" + esc(r ? r.notes : "") + "</textarea></div>" +
+    "</div>" +
+    "<div class='row'><button class='btn green' data-act='saveIn' data-id='" + (id || "") + "'>💾 Сохранить</button>" +
+    "<button class='btn ghost' data-act='closeDialog'>Отмена</button></div>"
+  );
+}
+function saveIn(id) {
+  var jobs = [];
+  var rows = document.querySelectorAll("#jobsBox .job-row");
+  for (var i = 0; i < rows.length; i++) {
+    var pos = rows[i].querySelector(".j_pos").value.trim();
+    var from = rows[i].querySelector(".j_from").value;
+    var to = rows[i].querySelector(".j_to").value;
+    if (pos || from || to) jobs.push({ position: pos, from: from, to: to });
+  }
+  var data = {
+    incomingDate: document.getElementById("f_incomingDate").value,
+    incomingNo: document.getElementById("f_incomingNo").value.trim(),
+    birthYear: document.getElementById("f_birthYear").value.trim(),
+    org: document.getElementById("f_org").value.trim(),
+    studentFio: document.getElementById("f_studentFio").value.trim(),
+    regNumber: document.getElementById("f_regNumber").value.trim(),
+    jobs: jobs,
+    notes: document.getElementById("f_notes").value.trim()
+  };
+  if (!data.studentFio) { alert("Укажите ФИО студента!"); return; }
+  if (id) { var r = findIn(id); for (var k in data) r[k] = data[k]; }
+  else { data.id = uid(); data.stageIndex = 0; data.history = []; data.createdAt = today(); db.incoming.push(data); }
+  save(); closeDialog(); render();
+}
+function advanceIn(id) {
+  var r = findIn(id); if (!r) return;
+  if (r.stageIndex >= IN_STAGES.length - 1) return;
+  r.history.push({ stage: IN_STAGES[r.stageIndex], date: today() });
+  r.stageIndex++; save(); render();
+}
+function delIn(id) {
+  if (!confirm("Удалить запись?")) return;
+  db.incoming = db.incoming.filter(function (x) { return x.id !== id; });
+  save(); render();
+}
+
+// ======== настройка (справка) ========
+var settingsSubTab = "help";
+function viewSettings() {
+  var html = "<h2>⚙ Настройка</h2><div class='search'>" +
+    "<button class='btn small" + (settingsSubTab === "help" ? "" : " ghost") + "' data-act='setSubTab' data-id='help'>Справка</button>" +
+    "</div>";
+  if (settingsSubTab === "help") html += viewHelp();
+  return html;
+}
+function viewHelp() {
+  return "<div class='card'><h3 style='margin-top:0'>Справка по работе с программой</h3>" +
+    "<p><b>Сотрудники.</b> Нажмите «＋ Добавить сотрудника» и заполните карточку (ФИО обязательно). Новые сотрудники отображаются сверху списка. Поиск ищет по ФИО, должности и подразделению; если введено название подразделения — появится дополнительный поиск по ФИО/должности внутри него. Клик по фамилии открывает карточку. Кнопка «＋ запросы» создаёт документы для сотрудника. В окне карточки: «🖨 Предпросмотр и печать карточки» (показывает карточку перед печатью, в неё попадают и ещё не сохранённые правки), «✕» — закрыть окно; паспорт включает «Личный номер», есть поле «Примечания».</p>" +
+    "<p><b>Исходящие запросы.</b> Запросы сгруппированы блоками по кандидату. Кнопка «➡️ … — выполнено» переводит документ на следующий этап согласования, «✏️» — редактирование, «📄 Файл Word» — скачивается готовый файл .doc с подставленными данными (откройте в Word, исправьте при необходимости и печатайте), «🗑» — удаление. Для запроса характеристики можно создать до двух запросов с разными местами работы и адресами организаций. Внутренняя проверка: «Заместитель начальника по управлению персоналом» → «Подан» (дата ставится автоматически) → «Ожидание ответа» → результат «Да» / «Нет».</p>" +
+    "<p><b>Входящие запросы (студенты АХС).</b> Добавьте запрос, укажите дату поступления, требователя, ФИО и год рождения студента и его места работы в АХС (можно добавить несколько). Поиск — по фамилии студента. Клик по фамилии открывает карточку.</p>" +
+    "<p><b>Шаблоны документов.</b> Вставьте ваши тексты из Word; в местах данных ставьте подстановки ({ФИО}, {ФИОВин}, {ДатаРождения}, {Организация}, {АдресОрганизации}, {который/которая}, {Исполнитель} и др. — полный список на вкладке). Там же задаются шрифт, размер, поля страницы и число центрируемых строк шапки, а также общие данные исполнителя.</p>" +
+    "<p><b>Резервная копия.</b> Данные хранятся в базе SQLite (файл кадровый_учёт.db рядом с программой) и не пропадают при очистке браузера. Регулярно скачивайте копию (.json) на флешку/сетевой диск. «Восстановить из копии» полностью заменяет текущие данные.</p>" +
+    "<h3>Работа через удалённый доступ</h3>" +
+    "<p>Программа работает на одном компьютере, данные хранятся в её базе SQLite. Возможные варианты удалённой работы:</p>" +
+    "<ul>" +
+    "<li><b>Удалённый рабочий стол</b> (RDP / AnyDesk / TeamViewer): подключаетесь к рабочему компьютеру и работаете в программе как обычно — данные остаются в её базе. Самый простой способ.</li>" +
+    "<li><b>Общий диск</b> (сетевая папка, OneDrive/Google Drive): файл программы и резервные копии .json лежат в общей папке — на любом компьютере открываете файл и восстанавливаете данные из копии. Важно: при таком обмене не забывайте после работы выгружать свежую копию, иначе изменения перезапишут друг друга.</li>" +
+    "<li><b>Многопользовательская версия с сервером</b> — чтобы несколько человек работали одновременно с одними данными без обмена копиями. Это отдельный этап разработки; если он нужен, обсудим.</li>" +
+    "</ul>" +
+    "<p class='muted'>Позже в этом разделе появятся дополнительные функции настройки.</p></div>";
+}
+
+// ======== резервные копии ========
+function viewBackup() {
+  var n = db.employees.length + db.docs.length + db.incoming.length;
+  return "<h2>Резервная копия</h2>" +
+    "<div class='card'><p>Всего записей: <b>" + n + "</b> (сотрудников: " + db.employees.length + ", запросов: " + db.docs.length + ", входящих: " + db.incoming.length + ").</p>" +
+    "<p class='muted'>Данные хранятся в базе SQLite (файл кадровый_учёт.db рядом с программой). Регулярно сохраняйте копию на флешку или другой диск.</p>" +
+    "<div class='row'><button class='btn green' data-act='exportDb'>💾 Скачать копию (файл .json)</button>" +
+    "<label class='btn' style='cursor:pointer'>📂 Восстановить из копии<input type='file' id='importFile' accept='.json' style='display:none'></label></div></div>";
+}
+function exportDb() {
+  var blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "kadrovy-uchet-" + today() + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+function importDb(file) {
+  var r = new FileReader();
+  r.onload = function () {
+    try {
+      var data = JSON.parse(r.result);
+      if (!data.employees || !data.docs || !data.incoming) throw new Error("неверный формат");
+      if (!confirm("Восстановить данные из файла? Текущие данные будут заменены.")) return;
+      db = migrateDb(data); save(); alert("Данные восстановлены."); render();
+    } catch (e) { alert("Не удалось прочитать файл. Это точно копия этой программы?"); }
+  };
+  r.readAsText(file);
+}
+
+// ======== печать ========
+function getTplSettings(k) {
+  var s = db.tplSettings && db.tplSettings[k] ? db.tplSettings[k] : {};
+  var def = k === "characteristic" ? { center: 3 } : { center: 0 };
+  return { font: s.font || "Times New Roman", size: s.size || 14, margin: s.margin || 2, center: s.center !== undefined ? s.center : def.center };
+}
+function printTemplate(title, body, s) {
+  var w = window.open("", "_blank");
+  if (!w) { alert("Разрешите всплывающие окна для печати."); return; }
+  var lines = body.split("\n");
+  var centered = s.center || 0, counted = 0, parts = [];
+  for (var i = 0; i < lines.length; i++) {
+    if (centered > counted && lines[i].trim()) { parts.push("<div style='text-align:center'>" + esc(lines[i]) + "</div>"); counted++; }
+    else parts.push(esc(lines[i]));
+  }
+  w.document.write("<!doctype html><html><head><meta charset='utf-8'><title>" + esc(title) + "</title>" +
+    "<style>@page{size:A4;margin:" + s.margin + "cm} " +
+    "body{font-family:'" + s.font + "',serif;font-size:" + s.size + "pt;line-height:1.5;white-space:pre-wrap;margin:0;padding:0;color:#000;background:#fff}" +
+    "</style></head><body>" + parts.join("\n") + "</body></html>");
+  w.document.close(); w.print();
+}
+
+// ======== диалог ========
+function openDialog(title, html) {
+  var d = document.getElementById("dlg");
+  d.innerHTML = "<div class='dlg-head'><h3>" + esc(title) + "</h3><button class='x-btn' data-act='closeDialog' title='Закрыть' aria-label='Закрыть'>✕</button></div>" + html;
+  if (!d.open) d.showModal();
+}
+function closeDialog() {
+  var d = document.getElementById("dlg");
+  if (d.open) d.close();
+}
+
+// ======== единый обработчик кликов (без inline onclick) ========
+var ACTIONS = {
+  editEmployee: function (id, btn) { editEmployee(id || null); },
+  saveEmployee: function (id, btn) { saveEmployee(id || null, btn.dataset.thendocs === "1"); },
+  delEmployee: delEmployee,
+  addDocsFor: addDocsFor,
+  createDocs: createDocs,
+  advanceDoc: advanceDoc,
+  editDoc: editDoc,
+  saveDoc: saveDoc,
+  delDoc: delDoc,
+  printDoc: printDoc,
+  editIn: function (id) { editIn(id || null); },
+  saveIn: saveIn,
+  advanceIn: advanceIn,
+  delIn: delIn,
+  addJob: addJob,
+  removeJob: removeJob,
+  setSubTab: function (id) { settingsSubTab = id; render(); },
+  exportDb: exportDb,
+  saveTemplates: saveTemplates,
+  closeDialog: closeDialog,
+  previewCard: function (id) { previewCard(id || null); },
+  printPreview: printPreview,
+  closePreview: closePreview,
+  resultYes: function (id) { finishInternal(id, "yes"); },
+  resultNo: function (id) { finishInternal(id, "no"); }
+};
+document.addEventListener("click", function (e) {
+  var navBtn = e.target.closest ? e.target.closest("#nav button") : null;
+  if (navBtn) { setTab(navBtn.dataset.tab); return; }
+  var btn = e.target.closest ? e.target.closest("[data-act]") : null;
+  if (!btn) return;
+  var fn = ACTIONS[btn.dataset.act];
+  if (fn) fn(btn.dataset.id, btn);
+});
+document.addEventListener("input", function (e) {
+  if (e.target.id === "empSearch") { var pos = e.target.selectionStart; empFilter = e.target.value; render(); var n = document.getElementById("empSearch"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }
+  if (e.target.id === "empSubSearch") { var pos2 = e.target.selectionStart; empSubFilter = e.target.value; render(); var n2 = document.getElementById("empSubSearch"); if (n2) { n2.focus(); n2.setSelectionRange(pos2, pos2); } }
+  if (e.target.id === "inSearch") { var pos3 = e.target.selectionStart; inFilter = e.target.value; render(); var n3 = document.getElementById("inSearch"); if (n3) { n3.focus(); n3.setSelectionRange(pos3, pos3); } }
+});
+document.addEventListener("change", function (e) {
+  if (e.target.id === "docType") { docFilterType = e.target.value; render(); }
+  if (e.target.id === "docStage") { docFilterStage = e.target.value; render(); }
+  if (e.target.id === "importFile" && e.target.files[0]) importDb(e.target.files[0]);
+});
+
+initApp();
+</script>
+</body>
+</html>
